@@ -40,6 +40,11 @@ function generatePlane(){
 
   }
 }
+
+
+
+  const raycaster = new THREE.Raycaster()
+  console.log(raycaster)
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight, 0.1,1000);
   const light = new THREE.DirectionalLight(0xffffff,1);
@@ -52,10 +57,19 @@ function generatePlane(){
   document.body.appendChild(renderer.domElement);
 
   const planeGeometry = new THREE.PlaneGeometry(5,5,10,10)
-  const planeMaterial = new THREE.MeshPhongMaterial({color: 0xff0000,side: THREE.DoubleSide,flatShading: THREE.FlatShading})
+  const planeMaterial = new THREE.MeshPhongMaterial({
+    side: THREE.DoubleSide,
+    flatShading: THREE.FlatShading,
+    vertexColors: true,
+  })
   const planeMesh = new THREE.Mesh(planeGeometry,planeMaterial)
 
+  const colors = []
+  for (let i = 0; i < planeMesh.geometry.attributes.position.count; i++) {
+    colors.push(0,1,1);
+  }
   
+  planeMesh.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array([colors]),3)) 
 
   light.position.set(0,0,1)
   backLight.position.set(0,0,-1)
@@ -65,11 +79,27 @@ function generatePlane(){
 
   new threejsOrbitControls(camera,renderer.domElement)
   camera.position.z = 5
+  const mouse = {
+    x: undefined,
+    y: undefined
+  }
 
   function animate(){
     requestAnimationFrame(animate)
-    renderer.render(scene,camera)  
+    renderer.render(scene,camera)
+    
+    raycaster.setFromCamera(mouse, camera)
+    const intersects = raycaster.intersectObject(planeMesh)
+    // console.log(intersects)
+    if(intersects.length > 0) {
+      console.log('intersecting')
+    }
   }
 
   
   animate()
+  
+  addEventListener('mousemove', (event)=>{
+    mouse.x = (event.clientX/innerWidth)*2 - 1
+    mouse.y = ((event.clientY/innerHeight)*2 - 1) * (-1)
+  })
